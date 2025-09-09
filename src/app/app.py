@@ -72,30 +72,15 @@ def render_header():
             This chatbot uses:
             - FAISS vector store built from PDF and GitHub project data
             - OpenAI embeddings for semantic search
-            - LangChain RetrievalQA for grounded answers
+            - OpenAI chat models for grounded answers
             Enter a question below about the profile or projects and get an evidence-backed answer.
             """
         )
 
 
-def sidebar():
-    st.sidebar.header("Configuration")
-    api_key_input = st.sidebar.text_input("OpenAI API Key (overrides env)", type="password")
-    if api_key_input:
-        os.environ["OPENAI_API_KEY"] = api_key_input.strip()
-        st.sidebar.success("API key set for this session.")
-
-    k = st.sidebar.slider("Results to retrieve (k)", 2, 10, 4)
-    st.sidebar.markdown("---")
-    st.sidebar.write("**Docs directory:**")
-    st.sidebar.code(str(DOCS_DIR))
-
-    return k
-
-
 def ensure_api_key():
     if not os.environ.get("OPENAI_API_KEY"):
-        st.warning("OPENAI_API_KEY not found. Enter it in the sidebar to proceed.")
+        st.warning("OPENAI_API_KEY not found. Set it in the environment to proceed.")
         return False
     return True
 
@@ -103,10 +88,6 @@ def ensure_api_key():
 # -----------------------------
 # Chat Logic
 # -----------------------------
-SYSTEM_PROMPT = (
-    "You are a concise, professional assistant answering only from the provided documents. "
-    "If unsure, say you don't have that information in the sources."
-)
 
 
 def init_session():
@@ -143,7 +124,6 @@ def render_chat_history():
 # -----------------------------
 def main():
     render_header()
-    k = sidebar()
 
     if not ensure_api_key():
         return
@@ -155,16 +135,25 @@ def main():
     if user_input:
         add_message("user", user_input)
         with st.chat_message("assistant"):
-            with st.spinner("Retrieving and generating answer..."):
-                try:
-                    result = run_query(st.session_state.vectorstore, user_input, k=k)
-                    answer = result.get("result", "(No answer returned)")
-                    sources = [d.metadata.get("source", "unknown") for d in result.get("source_documents", [])]
-                except Exception as e:
-                    answer = f"Error: {e}"
-                    sources = []
+            try:
+                stream, sources = run_query(st.session_state.vectorstore, user_input)
+
+                tokens: List[str] = []
+
+                def stream_tokens():
+                    for chunk in stream:
+                        token = chunk.choices[0].delta.get("content", "")
+                        if token:
+                            tokens.append(token)
+                            yield token
+
+                st.write_stream(stream_tokens())
+                answer = "".join(tokens)
+            except Exception as e:
+                answer = f"Error: {e}"
+                sources = []
+
             add_message("assistant", answer, meta={"sources": sources})
-            st.markdown(answer)
             if sources:
                 with st.expander("Sources"):
                     for s in sources:

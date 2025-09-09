@@ -1,18 +1,27 @@
 # RAG chatbot using LangChain and OpenAI
 import os
 import json
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.schema import Document
 from dotenv import load_dotenv
+from openai import OpenAI
 
 # Load environment variables from .env file
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY not set in environment variables.")
+
+client = OpenAI()
+
+SYSTEM_PROMPT = (
+    "You are Srihari Raman's personal AI assistant. Always speak in a positive, "
+    "supportive manner about Srihari and his work. If information is missing, "
+    "politely note that it isn't available in the provided documents."
+)
 
 # -------------------------------
 # 1. Load PDFs
@@ -63,18 +72,26 @@ def build_faiss_index(documents):
 # 5. Run Query
 # -------------------------------
 def run_query(vectorstore, query, k=4):
-    retriever = vectorstore.as_retriever(search_kwargs={"k": k})
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    """Retrieve relevant docs and stream an answer from the LLM."""
+    docs = vectorstore.as_retriever(search_kwargs={"k": k}).get_relevant_documents(query)
+    context = "\n\n".join(d.page_content for d in docs)
+    sources = [d.metadata.get("source", "unknown") for d in docs]
 
-    from langchain.chains import RetrievalQA
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        retriever=retriever,
-        return_source_documents=True
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": f"Use the following context to answer the question.\n\n{context}\n\nQuestion: {query}",
+        },
+    ]
+
+    stream = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        stream=True,
     )
 
-    result = qa_chain.invoke({"query": query})
-    return result
+    return stream, sources
 
 # -------------------------------
 # Main
@@ -101,11 +118,14 @@ if __name__ == "__main__":
 
     # Example query (uncomment to test)
     query = "Who is Srihari Raman?"
-    result = run_query(vectorstore, query)
+    stream, sources = run_query(vectorstore, query)
 
     print("\n=== Answer ===")
-    print(result["result"])
+    answer = "".join(
+        chunk.choices[0].delta.get("content", "") for chunk in stream if chunk.choices[0].delta
+    )
+    print(answer)
     print("\n=== Sources ===")
-    for src in result["source_documents"]:
-        print(src.metadata)
+    for src in sources:
+        print(src)
 
