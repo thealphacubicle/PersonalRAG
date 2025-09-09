@@ -6,6 +6,13 @@ from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.schema import Document
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY not set in environment variables.")
 
 # -------------------------------
 # 1. Load PDFs
@@ -48,7 +55,7 @@ def chunk_documents(docs, chunk_size=1000, chunk_overlap=100):
 # 4. Build FAISS Vector Store
 # -------------------------------
 def build_faiss_index(documents):
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small", api_key=OPENAI_API_KEY)
     vectorstore = FAISS.from_documents(documents, embeddings)
     return vectorstore
 
@@ -93,7 +100,7 @@ if __name__ == "__main__":
     vectorstore = build_faiss_index(chunked_docs)
 
     # Example query (uncomment to test)
-    query = "What are Srihari Raman's top 2 github projects?"
+    query = "Who is Srihari Raman?"
     result = run_query(vectorstore, query)
 
     print("\n=== Answer ===")
