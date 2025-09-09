@@ -1,0 +1,133 @@
+{
+    "username": "thealphacubicle",
+    "projects": [
+        {
+            "name": "Amtrak-Review-Analysis",
+            "description": "An NLP analysis on Amtrak's Northeast Corridor service",
+            "language": "Jupyter Notebook",
+            "stars": 1,
+            "forks": 0,
+            "readme": "Amtrak Review Analysis:\n\n Project Description:\nWelcome! This is a data analysis project on Amtrak's train services across the United \nStates. Using web scraping, NLP, and text mining, I've looked across various customers\nexperience platforms to understand how consumers feel about Amtrak!\n\n Libraries Used:\n1. Streamlit (Web App)\n2. VaderSentiment\n3. Matplotlib, Seaborn, Plotly, TextBlob (Graphing)\n4. NLTK\n5. Pandas\n6. BeautifulSoup\n6. HuggingFace Transformers (ZeroShot Classification)\n\n Quick Start:\nVisit the live dashboard app here!\nA big thanks to Heroku's PaaS for hosting the Streamlit dashboard!\n\n Want to Contribute?\nCurrently, only the dasboard is open for contribution. All issues, forks, and pull requests are\nwelcome!\n\n Local Development:\n1. Install dependencies:\n\npip install streamlit\n\n2. Run on local host:\n\nstreamlit run https://raw.githubusercontent.com/thealphacubicle/AmtrakReviewAnalysis/main/dashboard.py\n\n Communal Development:\nWhen opening issues, please adhere to the following guidelines:\n Bugs: Please trail the headline of the bug with the BUG keyword for easy handling. Clearly \nstate what the bug is, and optionally, what needs to be resolved!\n New Ideas: Please trail the headline of the idea with the IDEA keyword and a short synapsis of the idea. \nAdditionally, include what your idea entails!"
+        },
+        {
+            "name": "AWS-Transcribe-ETL",
+            "description": "An AWS ETL pipeline built as part of the DS4300 final project.",
+            "language": "Python",
+            "stars": 0,
+            "forks": 0,
+            "readme": "DS4300FinalProject\nAn AWS ETL pipeline built as part of the DS4300 final project."
+        },
+        {
+            "name": "BlockchainViz",
+            "description": "A unique data pipeline project to visualize blockchain data using Tableau",
+            "language": "Python",
+            "stars": 0,
+            "forks": 0,
+            "readme": "Introduction\nWelcome to the BlockChain Visualization project! This project aims to visualize the \nblockchain data in a more intuitive way. The project is divided into two parts: the \nbackend and the frontend. The backend is responsible for fetching the blockchain data \nand processing it, while the frontend is responsible for visualizing the processed data.\nThe frontend consists of Tableau dashboards that visualize the blockchain data. \nThe backend is a Python script that fetches the blockchain data and is stored inside\na MongoDB Atlas instance. \n\nI have also written a Medium article that explains the project in more detail. See here\nfor more details!\n\n Collecting the Data\nThe data is collected using the pipeline.py script. The script fetches the data from\nthe blockchair.com API. The data is then stored in a MongoDB\nAtlas instance. Currently, the script does not run automatically, but the feature will be\nadded in the future.\n\n Visualizing the Data\nThe data is visualized using Tableau dashboards. The current version of the dashboards\nlooks like this:\n\n Collaborators\nCurrently, the project is not open for collaboration. However, the project will be open\nin the near future to allow for more contributors and added functionality.\n\n Installation\n Step 1: Clone the repository using SSH\nbash\ngit clone git@github.com:thealphacubicle/BlockchainViz.git \n\n Step 2: Create a virtual environment (preferably with Conda)\nbash\nconda create n blockchainviz python=3.8\n\n Step 3: Activate the virtual environment\nbash\nconda activate blockchainviz\n\n Step 4: Install the dependencies\nbash\npip install r requirements.txt\n\n Step 5: Create a keys.env file in the root directory and add the following keys:\nbash\nMONGOUSERNAME=\n\nMONGOPWD = \n\n Step 6: Run the pipeline.py script\nbash\npython pipeline.py\n\n Step 7: Open the Tableau dashboards and Connect to your MongoDB Atlas DB Instance\n You will need to install the MongoDB ODBC driver to connect to the MongoDB Atlas instance (see here).\n Once the driver is installed, open Tableau and connect to the MongoDB Atlas instance using the ODBC driver.\n You can now visualize the data using the Tableau dashboards!"
+        },
+        {
+            "name": "BlueBike-Dashboard",
+            "description": "A dashboard on MBTA commuter rail services as part of DS3500 HW2",
+            "language": "Python",
+            "stars": 0,
+            "forks": 0,
+            "readme": "Blue Bike Riders Dashboard\n\n Project Description\n\nThis project is an interactive dashboard created to model and visualize data about Blue Bike riders in Boston. \nThe goal was to create a dashboard that allows the user to explore the dataset and visualize different aspects of the \ndataset with ease. This project was done as part of the DS3500 HW2 assignment.\n\n Running The Dashboard Instructions\n\n 1. Install Dependencies\nYou need to install the required dependencies from the requirements.txt file. Run the following command to do so:\n\nbash\npip install r requirements.txt\n\n 2. Run app.py\nbash\npython app.py\n\n Contributors:\n1. Reema Sharma (@reexsharma)\n2. Srihari Raman (@thealphacubicle)"
+        },
+        {
+            "name": "Boston-Rideshare-Analysis",
+            "description": "A ML project in Python on analyzing ridesharing in Boston, USA",
+            "language": "Jupyter Notebook",
+            "stars": 0,
+            "forks": 0,
+            "readme": "Boston Rideshare Analysis\n\n Executive Summary\nWelcome to an indepth analysis of rideshare pricing in Boston! This analysis focuses on understanding how rideshare companies price their rides. Throughout this analysis, I've examined how the two largest rideshare companies—Uber and Lyft—price their rides. Given an indepth dataset found on Kaggle, I've analyzed what features most affect the respective pricing models. Using the various statistical analysis methods listed below, I've concluded that Uber tends to be cheaper than Lyft in the Boston area; moreover, Lyft weights their pricing more heavily on rideshare destinations whereas Uber weights environmental factors in their pricing model.\n\n Statistical Analysis Tools\n CrossAnalysis with Linear Regression in SciKit Learn\n Hypothesis Testing with Pingouin"
+        },
+        {
+            "name": "CA-House-Locations",
+            "description": "Analyzing house locations using ML for CA houses ",
+            "language": "Jupyter Notebook",
+            "stars": 0,
+            "forks": 0,
+            "readme": "No README found."
+        },
+        {
+            "name": "ClassRAG",
+            "description": "A local RAG system created to retrieve, process, and generate custom responses as part of DS4300 Practical 02 ",
+            "language": "Jupyter Notebook",
+            "stars": 0,
+            "forks": 1,
+            "readme": "Introduction\n\nWelcome to DS4300ClassRAG, a RetrievalAugmented Generation (RAG) system designed with a modular, plugandplay architecture. This project leverages multiple vector databases (Redis, Chroma, Qdrant) and local Large Language Models (LLMs) to deliver highquality, contextaware responses. By following the instructions below, you can quickly set up your environment, run the databases in Docker, and test a sample workflow.\n\nSee here for a working demo of our pipeline!\n\n Repository Structure\n\nDS4300ClassRAG/\n├── data/\n├── docs/\n├── notebooks/\n├── scripts/\n├── src/\n│   ├── dbconnectors/\n│   │   ├── init.py\n│   │   └── chroma.py   Sample script to demonstrate Chroma usage\n│   ├── embeddingconnectors/\n│   │   ├── init.py\n│   │   └── ...   Concrete embedding model connectors\n│   ├── llmconnectors/\n│   │   ├── init.py\n│   │   └── ...   Concrete LLM connectors\n│   └── utils/\n│       ├── init.py\n│       ├── dbmodel.py   Abstract base class for DB connectors\n│       ├── embeddingmodel.py\n│       ├── llmmodel.py\n│       ├── pipeline.py   Core pipeline orchestrating RAG\n│       └── main.py   Potential entry point to run pipeline\n        └── test.py  Sample file to run 1 specific RAG architecture\n        \n├── dockercompose.yml   Defines containers for Redis, Chroma, and Qdrant\n├── requirements.txt   Python dependencies\n└── README.md   Project documentation\n\nIn this repository:\n\n data/: Placeholder directory for storing raw or processed data files.  \n docs/: Documentation related to the project.\n notebooks/: Jupyter notebooks for experimentation and prototyping.  \n scripts/: Utility scripts or commandline tools.  \n src/: Main source code, subdivided into:\n   dbconnectors/: Concrete implementations for different databases  \n   embeddingconnectors/: Classes for embedding models.  \n   llmconnectors/: Classes for local LLM integrations.  \n   utils/: Contains abstract base classes, the pipeline orchestrator, experiment orchestrator, and test file.  \n dockercompose.yml: Defines containerized services for Redis, Chroma, and Qdrant.  \n requirements.txt: Python dependencies for the project.  \n README.md: This documentation file, providing setup instructions and usage details.\n\n Project Setup\n Project System Setup\n\n 1. Clone the Repository\n1. Clone the repository:  \n   bash\n   git clone \n\n    \n   \n 2. Create a Conda Environment\n1. Install Conda (if not already installed):  \n   Download and install Miniconda or Anaconda.\n\n2. Create & Activate a New Environment:  \n   Create an environment named ds4300rag with Python 3.12.9:\n   bash\n   conda create n ds4300rag python=3.12.9\n   conda activate ds4300rag\n    \n\n 3. Install Dependencies\n1. Install the dependencies from project root folder:\n   bash\n   pip install r requirements.txt\n   \n   \n2. Ensure the dependencies are installed:\n   bash\n   pip list\n   \n\n 4. Start the Docker Containers\n1. Start the Docker containers from the root directory:\n   bash\n   dockercompose up d\n   \n2. Ensure the containers are running:\n   bash\n   docker ps\n   \n\n 5. Install Ollama and pull the models\n1. Install Ollama locally by following the instructions here.\n2. Pull the models you wish to run by running the following command:\n   bash\n   ollama pull \n\n   \n   \n 6. Run the pipeline\n1. To run the pipeline:\n   bash\n   python src/main.py\n   \n2. To run the test file:\n   bash\n    python src/test.py\n    \n\n 7. Remove Docker Containers\n1. Stop and remove the Docker containers (NO PERSISTENCE):\n   bash\n   dockercompose down v\n   \n   \n2. To ensure persistence when stopping and starting the containers:\n   bash\n   dockercompose down"
+        },
+        {
+            "name": "ds5220-sensor-fusion-har",
+            "description": "An experimental exploration of sensor fusion in waist-mounted IoT devices",
+            "language": "Jupyter Notebook",
+            "stars": 0,
+            "forks": 0,
+            "readme": "Sensor Fusion HAR\n\nAn experimental project for the DS5220 course using the UCI Human Activity Recognition (HAR) dataset. The repository trains a suite of classical machine learning models across different sensor configurations while logging results to Weights & Biases.\n\n Quick Start\n\n Installation\n\n1. Create a Python 3.10+ environment.\n2. Install dependencies:\n\n   bash\n   pip install r requirements.txt\n   \n3. The training scripts expect processed parquet files under data/processed/. If they are missing, main.py will automatically\n   download the raw UCI HAR dataset, remove any overlapping subject ids between the train and test splits to avoid leakage,\n   and save cleaned train.parquet and test.parquet files. You can also run the preprocessing manually with\n   python src/utils/preprocess.py. These parquet files will not be tracked due to large size, but they are necessary for training.\n\n Configuration\n\n config/models.yaml – enables/disables models and sets default parameters.\n config/trainingconfig.yaml – defines notification preferences and hyperparameter grids for each model.\n\n Supported Models\n\nThe training pipeline includes the following classical machine learning models:\n\n Logistic Regression\n kNearest Neighbors\n Support Vector Machine\n Random Forest\n Extra Trees\n Naive Bayes\n\n Running Training\n\n1. Create a .env file in the root of the repository with your Weights & Biases API key:\n\n   \n   WANDBAPIKEY=yourkey\n    WANDBENTITY=yourentity   Optional, defaults to your W&B username\n   \n\n2. Start the experiment:\n\n   bash\n   python main.py\n   \n\nmain.py will ensure the processed data is available before training. The script then sequentially trains every enabled model on each\nsensor configuration and logs metrics such as trainaccuracy and testaccuracy to W&B. Desktop notifications are sent (if enabled in config/trainingconfig.yaml) at the start and end of the experiment and after each model–sensor pair completes, when enabled in the training config.\n\n Dashboard\n\nA lightweight dashboard built with Streamlit visualizes training and test accuracy from the W&B project.\n\n1. Ensure WANDBAPIKEY (and optionally WANDBENTITY) is set in your environment.\n2. Run the dashboard:\n\n   bash\n   python m streamlit run src/dashboard/app.py\n   \n\nThe page will display line charts of training and test accuracy for each run logged to W&B.\n\n Contributing\n\nIssues and pull requests are welcome!\n\n Feedback and Questions\nFor any questions or feedback, please open an issue or contact me via email!"
+        },
+        {
+            "name": "EV-Visualization",
+            "description": "A code repository for EV Vehicle Populations for our DS4200 class at NEU",
+            "language": "Jupyter Notebook",
+            "stars": 1,
+            "forks": 0,
+            "readme": "No README found."
+        },
+        {
+            "name": "F1TireStrategy",
+            "description": "A project in Java that calculates the optimal tire strategy for a given number of laps for an F1 race.",
+            "language": "Java",
+            "stars": 1,
+            "forks": 1,
+            "readme": "No README found."
+        },
+        {
+            "name": "glassbox",
+            "description": "glassbox: Observe. Understand. Trust your models.",
+            "language": "Python",
+            "stars": 1,
+            "forks": 0,
+            "readme": "No README found."
+        },
+        {
+            "name": "langchain-crash-course",
+            "description": "Langchain crash course for building RAGs/LLM-based digital products",
+            "language": null,
+            "stars": 0,
+            "forks": 0,
+            "readme": "No README found."
+        },
+        {
+            "name": "Linguisight",
+            "description": "A pipeline architecture NLP package intended to make NLP analysis modular and insightful!",
+            "language": "Python",
+            "stars": 0,
+            "forks": 0,
+            "readme": "No README found."
+        },
+        {
+            "name": "NLP-Abstract-Readibility",
+            "description": "A project to test the best model for evaluating the readability of research abstracts",
+            "language": "Jupyter Notebook",
+            "stars": 0,
+            "forks": 0,
+            "readme": "No README found."
+        },
+        {
+            "name": "NLP-Predicting-Wine-Preference",
+            "description": null,
+            "language": "HTML",
+            "stars": 0,
+            "forks": 0,
+            "readme": "No README found."
+        },
+        {
+            "name": "WeatherNotifier",
+            "description": null,
+            "language": "Python",
+            "stars": 0,
+            "forks": 0,
+            "readme": "No README found."
+        }
+    ]
+}
