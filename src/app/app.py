@@ -62,9 +62,9 @@ def build_index():
 # UI Components
 # -----------------------------
 def render_header():
-    st.set_page_config(page_title="Personal RAG Chatbot", page_icon="💬", layout="wide")
-    st.title("💬 Personal Profile RAG Chatbot")
-    st.caption("Interactive Retrieval-Augmented Generation over resume, LinkedIn profile, and GitHub projects.")
+    st.set_page_config(page_title="Srihari Knowledge Chatbot", page_icon="💬", layout="wide")
+    st.title("💬 Srihari Knowledge Chatbot")
+    st.caption("Interested to know about Srihari? Ask away!")
 
     with st.expander("ℹ️ About this app", expanded=False):
         st.write(
