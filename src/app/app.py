@@ -98,7 +98,8 @@ RESULTS_K = 4  # Number of results to retrieve per query
 def init_session():
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "Welcome to the Personal Profile RAG Chatbot!"}
+            {"role": "assistant", "content": "Hi, welcome to the Srihari Knowledge Hub!\n\n"
+                                             "What would you like to know about me?"}
         ]
     if "vectorstore" not in st.session_state:
         try:
@@ -147,7 +148,14 @@ def main():
                 try:
                     result = run_query(st.session_state.vectorstore, user_input, k=RESULTS_K)
                     answer = result.get("result", "(No answer returned)")
-                    sources = [d.metadata.get("source", "unknown") for d in result.get("source_documents", [])]
+                    raw_sources = [d.metadata.get("source", "unknown") for d in result.get("source_documents", [])]
+                    # Deduplicate while preserving order
+                    seen = set()
+                    sources = []
+                    for s in raw_sources:
+                        if s not in seen:
+                            seen.add(s)
+                            sources.append(s)
                 except Exception as e:
                     answer = f"Error: {e}"
                     sources = []
@@ -155,8 +163,12 @@ def main():
             st.markdown(answer)
             if sources:
                 with st.expander("Sources"):
+                    # Ensure uniqueness again on render (in case of legacy messages)
+                    rendered = []
                     for s in sources:
-                        st.write(f"• {s}")
+                        if s not in rendered:
+                            rendered.append(s)
+                            st.write(f"• {s}")
 
 
 if __name__ == "__main__":
