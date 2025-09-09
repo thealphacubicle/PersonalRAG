@@ -77,25 +77,9 @@ def render_header():
             """
         )
 
-
-def sidebar():
-    st.sidebar.header("Configuration")
-    api_key_input = st.sidebar.text_input("OpenAI API Key (overrides env)", type="password")
-    if api_key_input:
-        os.environ["OPENAI_API_KEY"] = api_key_input.strip()
-        st.sidebar.success("API key set for this session.")
-
-    k = st.sidebar.slider("Results to retrieve (k)", 2, 10, 4)
-    st.sidebar.markdown("---")
-    st.sidebar.write("**Docs directory:**")
-    st.sidebar.code(str(DOCS_DIR))
-
-    return k
-
-
 def ensure_api_key():
     if not os.environ.get("OPENAI_API_KEY"):
-        st.warning("OPENAI_API_KEY not found. Enter it in the sidebar to proceed.")
+        st.warning("OPENAI_API_KEY not found. Please set it as an environment variable.")
         return False
     return True
 
@@ -108,10 +92,14 @@ SYSTEM_PROMPT = (
     "If unsure, say you don't have that information in the sources."
 )
 
+RESULTS_K = 4  # Number of results to retrieve per query
+
 
 def init_session():
     if "messages" not in st.session_state:
-        st.session_state.messages = []
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Welcome to the Personal Profile RAG Chatbot!"}
+        ]
     if "vectorstore" not in st.session_state:
         try:
             with st.spinner("Building vector index (first time only)..."):
@@ -143,8 +131,6 @@ def render_chat_history():
 # -----------------------------
 def main():
     render_header()
-    k = sidebar()
-
     if not ensure_api_key():
         return
 
@@ -153,11 +139,13 @@ def main():
 
     user_input = st.chat_input("Ask something about the profile or projects...")
     if user_input:
+        with st.chat_message("user"):
+            st.markdown(user_input)
         add_message("user", user_input)
         with st.chat_message("assistant"):
             with st.spinner("Retrieving and generating answer..."):
                 try:
-                    result = run_query(st.session_state.vectorstore, user_input, k=k)
+                    result = run_query(st.session_state.vectorstore, user_input, k=RESULTS_K)
                     answer = result.get("result", "(No answer returned)")
                     sources = [d.metadata.get("source", "unknown") for d in result.get("source_documents", [])]
                 except Exception as e:
