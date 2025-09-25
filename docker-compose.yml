@@ -4,6 +4,7 @@ services:
     build: .
     image: personalrag:latest
     container_name: personalrag-api
+    command: ["api"]
     ports:
       - "8000:8000"
     environment:
@@ -16,3 +17,16 @@ services:
       retries: 5
       start_period: 20s
     restart: unless-stopped
+
+  ui:
+    build: .
+    image: personalrag:latest
+    container_name: personalrag-ui
+    command: ["ui"]
+    ports:
+      - "8501:8501"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      api:
+        condition: service_started

@@ -3,7 +3,10 @@ FROM python:3.12-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
+    PYTHONPATH=/app
 
 # Use HTTPS mirrors and retry to avoid transient 5xx errors
 RUN set -eux; \
@@ -15,11 +18,16 @@ RUN set -eux; \
 WORKDIR /app
 
 # Install Python deps
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Copy app
-COPY src/ ./src/
+# Copy application code and entrypoint
+COPY src ./src
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-EXPOSE 8000
-CMD ["uvicorn", "src.app.api:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000 8501
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["api"]

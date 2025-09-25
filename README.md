@@ -99,6 +99,29 @@ OPENAI_API_KEY=sk-your-key
 > Never commit `.env`.
 
 ---
+## Docker Usage
+
+Build and run both the FastAPI backend and the Streamlit chat UI locally using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+This starts two containers from the same image:
+
+- `personalrag-api` exposes the REST interface at http://localhost:8000 (health check at `/health`, chat endpoint at `/v1/chat`).
+- `personalrag-ui` exposes the Streamlit interface at http://localhost:8501.
+
+Pass your OpenAI API key through the environment before starting Compose:
+
+```bash
+export OPENAI_API_KEY=sk-your-key
+docker compose up --build
+```
+
+To run only one component, specify the service name (e.g. `docker compose up api`).
+
+---
 ## Indexing & CLI Test
 You can exercise the pipeline directly:
 ```bash
