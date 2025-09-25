@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    image: personalrag:latest
+    container_name: personalrag-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Prefer passing via your shell or an .env file next to this compose file
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped

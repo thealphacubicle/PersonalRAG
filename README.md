@@ -8,6 +8,7 @@ A minimal, production‑oriented Retrieval Augmented Generation (RAG) applicatio
 - Positive, controlled system prompt (custom persona rules)
 - LangChain RetrievalQA (non‑streaming path) or custom streaming UI (optional variant)
 - Streamlit chat interface with source attribution & deduplicated citations
+- FastAPI service exposing a simple chat endpoint
 
 ---
 ## Features
@@ -16,8 +17,9 @@ A minimal, production‑oriented Retrieval Augmented Generation (RAG) applicatio
 - 🧠 Structured system prompt enforcing tone, positivity, and fallback rules
 - 🗂 Source documents cited (duplicates removed)
 - 💬 Chat UI with expandable sources section
-- 🧩 Modular pipeline (`main.py`) reusable outside the UI
+- 🧩 Modular pipeline (`src/rag.py`) reusable outside the UI
 - 🛡 Avoids hallucinations by grounding answers in retrieved chunks
+- 🌐 REST endpoint: `POST /v1/chat`
 
 ---
 ## Architecture
@@ -46,10 +48,11 @@ User Query ---> Prompt Assembly (System Persona + Context) ---> OpenAI Chat Mode
 ## Project Structure
 ```
 src/
-  main.py               # Core RAG build + query utilities
-  github.py             # (If present) GitHub project extraction helper
-  app/app.py            # Streamlit chat application
-  docs/                 # Local knowledge base (PDFs, JSON)
+  rag.py               # Core RAG build + query utilities
+  github.py            # (If present) GitHub project extraction helper
+  app/app.py           # Streamlit chat application
+  app/api.py           # FastAPI app exposing /v1/chat
+  docs/                # Local knowledge base (PDFs, JSON)
     Srihari_Online_Resume.pdf
     Srihari_LinkedIn_Profile.pdf
     thealphacubicle_projects.json
@@ -99,7 +102,7 @@ OPENAI_API_KEY=sk-your-key
 ## Indexing & CLI Test
 You can exercise the pipeline directly:
 ```bash
-poetry run python src/main.py
+poetry run python src/rag.py
 ```
 This will:
 1. Load documents from `src/docs/`
@@ -117,11 +120,41 @@ Then open the displayed local URL (typically http://localhost:8501).
 First run builds the vector index (cached). Subsequent queries are fast.
 
 ---
+## Run the FastAPI Service
+```bash
+# Option A: uvicorn
+poetry run uvicorn src.app.api:app --host 0.0.0.0 --port 8000 --reload
+
+# Option B: module entrypoint
+poetry run python -m src.app.api
+```
+- Endpoint: POST http://localhost:8000/v1/chat
+- Request body:
+```json
+{
+  "query": "Who is Srihari Raman?",
+  "k": 4
+}
+```
+- Example curl:
+```bash
+curl -s -X POST http://localhost:8000/v1/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"query": "What projects has Srihari built?"}' | jq
+```
+- JSON response shape:
+```json
+{
+  "answer": "...",
+  "sources": ["github/thealphacubicle/<project>", "src/docs/...pdf"]
+}
+```
+The API builds the FAISS index once on startup by scanning `src/docs/` for PDFs and a JSON file.
+
+---
 ## Adding / Updating Documents
 Place additional PDFs or a new JSON metadata file into `src/docs/`. Then:
-- Stop the app
-- (Optional) Clear Streamlit cache: `streamlit cache clear`
-- Restart the app to rebuild the index automatically
+- Restart the API or Streamlit app to rebuild the index automatically
 
 Recommended JSON shape (example excerpt):
 ```json
@@ -145,7 +178,7 @@ Recommended JSON shape (example excerpt):
 | Parameter | Where | Purpose |
 |-----------|-------|---------|
 | k         | `run_query(..., k=4)` / app constant | Number of chunks retrieved |
-| chunk_size| `chunk_documents` in `main.py`        | Larger = fewer, broader chunks |
+| chunk_size| `chunk_documents` in `rag.py`        | Larger = fewer, broader chunks |
 | chunk_overlap | same                              | Helps maintain semantic continuity |
 
 To tune recall vs speed, adjust `k` and `chunk_size`.
@@ -154,7 +187,7 @@ To tune recall vs speed, adjust `k` and `chunk_size`.
 ## Extending
 | Goal | Suggested Change |
 |------|------------------|
-| Streaming answers | Replace RetrievalQA with manual retrieve + incremental OpenAI streaming (already prototyped in earlier variant) |
+| Streaming answers | Replace RetrievalQA with manual retrieve + incremental OpenAI streaming |
 | Multi-file formats | Add loaders from `langchain_community.document_loaders` |
 | Persist index | Use `FAISS.save_local()` / `load_local()` |
 | Rerank stage | Insert Cohere / CrossEncoder reranker after retrieval |
@@ -168,7 +201,7 @@ To tune recall vs speed, adjust `k` and `chunk_size`.
 | Empty answers | Docs missing / not loaded | Confirm PDF & JSON present in `src/docs/` |
 | OpenAI auth error | Missing API key | Add to `.env` or export shell var |
 | Slow first query | Embedding build | Normal; cached afterward |
-| Duplicate sources | Now deduplicated in UI | If persists, clear cache |
+| 503 Vector index not ready | Startup failed | Check logs for missing docs or API key |
 
 ---
 ## Security & Privacy
@@ -177,12 +210,13 @@ To tune recall vs speed, adjust `k` and `chunk_size`.
 - Keep `.env` excluded via `.gitignore`.
 
 ---
-## Potential Improvements (Roadmap)
-- Add streaming UI version with typing animation (if not active)
-- Add conversation memory while re‑grounding each turn
-- Introduce guardrails for off‑topic queries
-- Automated evaluation script
-- Dockerfile for reproducible deployment
+## Quick Reference
+```bash
+poetry install                            # Install deps
+poetry run python src/rag.py              # CLI test
+poetry run streamlit run src/app/app.py   # Launch UI
+poetry run uvicorn src.app.api:app --reload  # Launch API
+```
 
 ---
 ## License
@@ -190,20 +224,3 @@ Specify a license (e.g., MIT) here. Example:
 ```
 MIT License – 2025 Your Name
 ```
-
----
-## Quick Reference
-```bash
-poetry install                           # Install deps
-poetry run python src/main.py            # CLI test
-poetry run streamlit run src/app/app.py  # Launch UI
-streamlit cache clear                    # Reset cached index (optional)
-```
-
----
-## Disclaimer
-This assistant is tuned to remain **positive** by design; verify factual claims against the original source documents when precision is critical.
-
----
-Happy exploring! Modify, extend, and adapt for broader personal knowledge bases.
-

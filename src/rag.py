@@ -8,12 +8,10 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain.schema import Document
 from dotenv import load_dotenv
 from langchain.prompts import ChatPromptTemplate
+from pydantic import SecretStr
 
 # Load environment variables from .env file
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY not set in environment variables.")
 
 # -------------------------------
 # System Prompt (Injected into LLM calls)
@@ -60,6 +58,7 @@ Follow these rules strictly:
 Always ground answers ONLY in the provided context chunks. If the context lacks the needed info, follow the unknown handling rules above.
 """
 
+
 # -------------------------------
 # 1. Load PDFs
 # -------------------------------
@@ -69,6 +68,7 @@ def load_pdfs(pdf_files):
         loader = PyPDFLoader(pdf)
         docs.extend(loader.load())
     return docs
+
 
 # -------------------------------
 # 2. Load GitHub JSON
@@ -90,6 +90,7 @@ def load_github_json(json_file):
         docs.append(Document(page_content=content, metadata={"source": f"github/{username}/{project['name']}"}))
     return docs
 
+
 # -------------------------------
 # 3. Split into chunks
 # -------------------------------
@@ -97,18 +98,31 @@ def chunk_documents(docs, chunk_size=1000, chunk_overlap=100):
     splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     return splitter.split_documents(docs)
 
+
 # -------------------------------
 # 4. Build FAISS Vector Store
 # -------------------------------
+def _get_openai_api_key() -> str:
+    # Resolve API key at runtime to avoid import-time failures
+    load_dotenv("../.env")
+    key = os.getenv("OPENAI_API_KEY")
+    if not key:
+        raise ValueError("OPENAI_API_KEY not set in environment variables.")
+    return key
+
+
 def build_faiss_index(documents):
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small", api_key=OPENAI_API_KEY)
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small", api_key=SecretStr(_get_openai_api_key()))
     vectorstore = FAISS.from_documents(documents, embeddings)
     return vectorstore
+
 
 # -------------------------------
 # 5. Run Query
 # -------------------------------
-def run_query(vectorstore, query, k=4):
+def run_query(vectorstore, query, k=4, api_key=None):
+
+    api_key = api_key or _get_openai_api_key()
     retriever = vectorstore.as_retriever(search_kwargs={"k": k})
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
@@ -129,6 +143,7 @@ def run_query(vectorstore, query, k=4):
     result = qa_chain.invoke({"query": query})
     return result
 
+
 # -------------------------------
 # Main
 # -------------------------------
@@ -139,12 +154,16 @@ if __name__ == "__main__":
 
     # Collect PDFs and JSON file
     pdf_files = [os.path.join(docs_dir, file) for file in os.listdir(docs_dir) if file.endswith(".pdf")]
-    json_file = [os.path.join(docs_dir, file) for file in os.listdir(docs_dir) if file.endswith(".json")][0]
+    json_candidates = [os.path.join(docs_dir, file) for file in os.listdir(docs_dir) if file.endswith(".json")]
+    json_file = json_candidates[0] if json_candidates else None
 
     # Load and combine docs
-    pdf_docs = load_pdfs(pdf_files)
-    github_docs = load_github_json(json_file)
+    pdf_docs = load_pdfs(pdf_files) if pdf_files else []
+    github_docs = load_github_json(json_file) if json_file else []
     all_docs = pdf_docs + github_docs
+
+    if not all_docs:
+        raise SystemExit("No documents found under src/docs. Place PDFs and a JSON file there.")
 
     # Chunk for embeddings
     chunked_docs = chunk_documents(all_docs)

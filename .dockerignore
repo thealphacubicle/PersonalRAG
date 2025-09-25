@@ -1,0 +1,44 @@
+# Ignore VCS and local dev files
+.git
+.gitignore
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+.venv
+venv
+ENV
+env
+**/.mypy_cache
+**/.pytest_cache
+**/.ruff_cache
+**/.vscode
+**/.idea
+.DS_Store
+
+# Byte-compiled / optimized / DLL files
+**/*.egg-info/
+
+# Build outputs
+build/
+dist/
+
+# Coverage / test artifacts
+htmlcov/
+.coverage*
+.pytest_cache/
+
+# Node/npm
+node_modules/
+
+# Cache
+__pycache__/
+.cache/
+
+# Keep only what we need in the build context
+!requirements.txt
+!README.md
+!src/**
+

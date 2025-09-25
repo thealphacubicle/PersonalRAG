@@ -9,7 +9,7 @@ from typing import List
 
 try:
     # Reuse pipeline functions from main module
-    from src.main import (
+    from src.rag import (
         build_faiss_index,
         chunk_documents,
         load_github_json,
