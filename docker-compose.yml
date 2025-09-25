@@ -4,7 +4,7 @@ services:
     build: .
     image: personalrag:latest
     container_name: personalrag-api
-    command: ["api"]
+    command: ["api", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "8000:8000"
     environment:
