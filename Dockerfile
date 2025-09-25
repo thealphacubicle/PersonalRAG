@@ -4,8 +4,6 @@ FROM python:3.12-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    STREAMLIT_SERVER_HEADLESS=true \
-    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
     PYTHONPATH=/app
 
 # Use HTTPS mirrors and retry to avoid transient 5xx errors
@@ -27,7 +25,7 @@ COPY src ./src
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 8000 8501
+EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["api"]
