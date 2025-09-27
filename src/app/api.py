@@ -28,7 +28,11 @@ app = FastAPI(title="PersonalRAG API", version="1.0.0")
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://personalrag-production.up.railway.app", "http://localhost:3000"],
+    allow_origins=[
+        "https://thealphacubicle.dev",
+        "http://localhost:3000",
+        "https://thealphacubicle.github.io",
+    ],
     allow_credentials=True,
     allow_methods=["POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
