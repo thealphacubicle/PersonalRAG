@@ -6,20 +6,17 @@ A minimal, production‑oriented Retrieval Augmented Generation (RAG) applicatio
 - Chunking & embedding (OpenAI embeddings)
 - FAISS vector similarity search
 - Positive, controlled system prompt (custom persona rules)
-- LangChain RetrievalQA (non‑streaming path) or custom streaming UI (optional variant)
-- Streamlit chat interface with source attribution & deduplicated citations
+- LangChain RetrievalQA pipeline for grounded responses
 - FastAPI service exposing a simple chat endpoint
 
 ---
 ## Features
-- ⚡ One‑time indexing cached via `st.cache_resource`
 - 🔍 Semantic retrieval over curated profile knowledge
 - 🧠 Structured system prompt enforcing tone, positivity, and fallback rules
 - 🗂 Source documents cited (duplicates removed)
-- 💬 Chat UI with expandable sources section
-- 🧩 Modular pipeline (`src/rag.py`) reusable outside the UI
+- 🧩 Modular pipeline (`src/rag.py`) reusable outside server contexts
 - 🛡 Avoids hallucinations by grounding answers in retrieved chunks
-- 🌐 REST endpoint: `POST /v1/chat`
+- 🌐 FastAPI endpoint: `POST /v1/chat`
 
 ---
 ## Architecture
@@ -50,7 +47,6 @@ User Query ---> Prompt Assembly (System Persona + Context) ---> OpenAI Chat Mode
 src/
   rag.py               # Core RAG build + query utilities
   github.py            # (If present) GitHub project extraction helper
-  app/app.py           # Streamlit chat application
   app/api.py           # FastAPI app exposing /v1/chat
   docs/                # Local knowledge base (PDFs, JSON)
     Srihari_Online_Resume.pdf
@@ -99,6 +95,24 @@ OPENAI_API_KEY=sk-your-key
 > Never commit `.env`.
 
 ---
+## Docker Usage
+
+Build and run the FastAPI backend locally using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+This starts a single container exposing the REST interface at http://localhost:8000 (health check at `/health`, chat endpoint at `/v1/chat`).
+
+Pass your OpenAI API key through the environment before starting Compose:
+
+```bash
+export OPENAI_API_KEY=sk-your-key
+docker compose up --build
+```
+
+---
 ## Indexing & CLI Test
 You can exercise the pipeline directly:
 ```bash
@@ -110,16 +124,6 @@ This will:
 3. Build FAISS index
 4. Run a sample query
 
----
-## Run the Streamlit App
-```bash
-poetry run streamlit run src/app/app.py
-```
-Then open the displayed local URL (typically http://localhost:8501).
-
-First run builds the vector index (cached). Subsequent queries are fast.
-
----
 ## Run the FastAPI Service
 ```bash
 # Option A: uvicorn
@@ -153,8 +157,7 @@ The API builds the FAISS index once on startup by scanning `src/docs/` for PDFs 
 
 ---
 ## Adding / Updating Documents
-Place additional PDFs or a new JSON metadata file into `src/docs/`. Then:
-- Restart the API or Streamlit app to rebuild the index automatically
+Place additional PDFs or a new JSON metadata file into `src/docs/`. Then restart the API container (or process) to rebuild the index automatically.
 
 Recommended JSON shape (example excerpt):
 ```json
@@ -214,7 +217,6 @@ To tune recall vs speed, adjust `k` and `chunk_size`.
 ```bash
 poetry install                            # Install deps
 poetry run python src/rag.py              # CLI test
-poetry run streamlit run src/app/app.py   # Launch UI
 poetry run uvicorn src.app.api:app --reload  # Launch API
 ```
 
