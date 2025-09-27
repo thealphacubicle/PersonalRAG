@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 from typing import List, Optional
+from fastapi.middleware.cors import CORSMiddleware
 
 # Ensure project root is on sys.path for imports like `from src.rag import ...`
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -23,6 +24,15 @@ from src.rag import (
 )
 
 app = FastAPI(title="PersonalRAG API", version="1.0.0")
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://personalrag-production.up.railway.app", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
 
 
 class ChatRequest(BaseModel):
