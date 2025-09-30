@@ -1,0 +1,35 @@
+name: Feature Branch CI
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'feat/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  basic-quality:
+    name: Basic Lint & Package Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Validate bytecode compilation
+        run: python -m compileall src
+
+      - name: Verify installed packages
+        run: python -m pip check
