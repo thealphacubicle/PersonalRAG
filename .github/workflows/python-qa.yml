@@ -40,12 +40,12 @@ jobs:
 
       - name: Lint with flake8
         run: |
-          flake8 ${{ inputs.lint-paths }}
+          flake8 "${{ inputs.lint-paths }}"
 
       - name: Check formatting with Black
         run: |
-          black --check ${{ inputs.lint-paths }}
+          black --check "${{ inputs.lint-paths }}"
 
       - name: Compile sources for syntax validation
         run: |
-          python -m compileall ${{ inputs.lint-paths }}
+          python -m compileall "${{ inputs.lint-paths }}"
