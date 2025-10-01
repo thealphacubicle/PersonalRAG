@@ -97,9 +97,12 @@ def load_github_json(json_file):
 def load_text_files(text_files):
     docs = []
     for path in text_files:
-        with open(path, "r", encoding="utf-8") as f:
-            content = f.read()
-        docs.append(Document(page_content=content, metadata={"source": path}))
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            docs.append(Document(page_content=content, metadata={"source": path}))
+        except (FileNotFoundError, UnicodeDecodeError, OSError) as e:
+            print(f"Error reading file '{path}': {e}")
     return docs
 
 
