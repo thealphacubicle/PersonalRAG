@@ -1,0 +1,51 @@
+name: python-qa
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: Python version to use for QA checks
+        required: false
+        type: string
+        default: "3.12"
+      lint-paths:
+        description: Space separated paths to lint and format check
+        required: false
+        type: string
+        default: "src"
+      requirements-file:
+        description: Path to the requirements file used for installation
+        required: false
+        type: string
+        default: "requirements.txt"
+
+jobs:
+  qa:
+    name: Python QA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r "${{ inputs.requirements-file }}"
+          python -m pip install flake8==6.1.0 black==24.3.0
+
+      - name: Lint with flake8
+        run: |
+          flake8 "${{ inputs.lint-paths }}"
+
+      - name: Check formatting with Black
+        run: |
+          black --check "${{ inputs.lint-paths }}"
+
+      - name: Compile sources for syntax validation
+        run: |
+          python -m compileall "${{ inputs.lint-paths }}"

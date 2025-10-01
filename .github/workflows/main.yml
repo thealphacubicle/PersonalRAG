@@ -1,0 +1,13 @@
+name: Production CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  quality:
+    name: Base QA
+    uses: ./.github/workflows/python-qa.yml
+    with:
+      lint-paths: "src"
