@@ -153,11 +153,11 @@ curl -s -X POST http://localhost:8000/v1/chat \
   "sources": ["github/thealphacubicle/<project>", "src/docs/...pdf"]
 }
 ```
-The API builds the FAISS index once on startup by scanning `src/docs/` for PDFs and a JSON file.
+The API builds the FAISS index once on startup by scanning `src/docs/` for PDFs, plain-text files, and a JSON file.
 
 ---
 ## Adding / Updating Documents
-Place additional PDFs or a new JSON metadata file into `src/docs/`. Then restart the API container (or process) to rebuild the index automatically.
+Place additional PDFs, `.txt` files, or a new JSON metadata file into `src/docs/`. Then restart the API container (or process) to rebuild the index automatically.
 
 Recommended JSON shape (example excerpt):
 ```json
