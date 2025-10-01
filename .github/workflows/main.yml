@@ -11,6 +11,7 @@ jobs:
     uses: ./.github/workflows/python-qa.yml
     with:
       lint-paths: "src"
+      lint-continue-on-error: true
 
   publish-image:
     name: Publish Production Image

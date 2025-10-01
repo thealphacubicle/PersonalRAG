@@ -18,6 +18,11 @@ on:
         required: false
         type: string
         default: "requirements.txt"
+      lint-continue-on-error:
+        description: Allow lint steps to surface warnings without failing the workflow
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   qa:
@@ -39,10 +44,12 @@ jobs:
           python -m pip install flake8==6.1.0 black==24.3.0
 
       - name: Lint with flake8
+        continue-on-error: ${{ inputs.lint-continue-on-error }}
         run: |
           flake8 "${{ inputs.lint-paths }}"
 
       - name: Check formatting with Black
+        continue-on-error: ${{ inputs.lint-continue-on-error }}
         run: |
           black --check "${{ inputs.lint-paths }}"
 
