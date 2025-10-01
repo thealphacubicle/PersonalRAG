@@ -92,6 +92,18 @@ def load_github_json(json_file):
 
 
 # -------------------------------
+# 2b. Load plain text files
+# -------------------------------
+def load_text_files(text_files):
+    docs = []
+    for path in text_files:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        docs.append(Document(page_content=content, metadata={"source": path}))
+    return docs
+
+
+# -------------------------------
 # 3. Split into chunks
 # -------------------------------
 def chunk_documents(docs, chunk_size=1000, chunk_overlap=100):
@@ -154,16 +166,18 @@ if __name__ == "__main__":
 
     # Collect PDFs and JSON file
     pdf_files = [os.path.join(docs_dir, file) for file in os.listdir(docs_dir) if file.endswith(".pdf")]
+    text_files = [os.path.join(docs_dir, file) for file in os.listdir(docs_dir) if file.endswith(".txt")]
     json_candidates = [os.path.join(docs_dir, file) for file in os.listdir(docs_dir) if file.endswith(".json")]
     json_file = json_candidates[0] if json_candidates else None
 
     # Load and combine docs
     pdf_docs = load_pdfs(pdf_files) if pdf_files else []
+    text_docs = load_text_files(text_files) if text_files else []
     github_docs = load_github_json(json_file) if json_file else []
-    all_docs = pdf_docs + github_docs
+    all_docs = pdf_docs + text_docs + github_docs
 
     if not all_docs:
-        raise SystemExit("No documents found under src/docs. Place PDFs and a JSON file there.")
+        raise SystemExit("No documents found under src/docs. Add PDFs, .txt files, or a JSON metadata file.")
 
     # Chunk for embeddings
     chunked_docs = chunk_documents(all_docs)

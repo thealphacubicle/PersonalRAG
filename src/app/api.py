@@ -20,6 +20,7 @@ from src.rag import (
     chunk_documents,
     load_github_json,
     load_pdfs,
+    load_text_files,
     run_query,
 )
 
@@ -65,15 +66,18 @@ STARTUP_ERROR: Optional[str] = None
 
 def _discover_files():
     pdfs: List[str] = []
+    text_files: List[str] = []
     json_file: Optional[str] = None
     if not DOCS_DIR.exists():
-        return pdfs, json_file
+        return pdfs, text_files, json_file
     for p in DOCS_DIR.iterdir():
         if p.suffix.lower() == ".pdf":
             pdfs.append(str(p))
+        elif p.suffix.lower() == ".txt":
+            text_files.append(str(p))
         elif p.suffix.lower() == ".json" and json_file is None:
             json_file = str(p)
-    return pdfs, json_file
+    return pdfs, text_files, json_file
 
 
 @app.on_event("startup")
@@ -85,13 +89,15 @@ def startup_build_index():
         if not os.environ.get("OPENAI_API_KEY"):
             raise RuntimeError("OPENAI_API_KEY not set in environment variables.")
 
-        pdf_files, json_file = _discover_files()
-        if not pdf_files and not json_file:
-            raise RuntimeError("No PDF or JSON files found in docs directory.")
+        pdf_files, text_files, json_file = _discover_files()
+        if not pdf_files and not text_files and not json_file:
+            raise RuntimeError("No documents found in docs directory.")
 
         all_docs = []
         if pdf_files:
             all_docs.extend(load_pdfs(pdf_files))
+        if text_files:
+            all_docs.extend(load_text_files(text_files))
         if json_file:
             all_docs.extend(load_github_json(json_file))
 
@@ -110,8 +116,8 @@ def startup_build_index():
 @app.get("/health", response_model=HealthResponse)
 def health(response: Response):
     env_ok = bool(os.environ.get("OPENAI_API_KEY"))
-    pdfs, json_file = _discover_files()
-    docs_present = bool(pdfs or json_file)
+    pdfs, text_files, json_file = _discover_files()
+    docs_present = bool(pdfs or text_files or json_file)
     index_ready = VECTORSTORE is not None and not STARTUP_ERROR
 
     if not env_ok:
@@ -138,6 +144,7 @@ def health(response: Response):
         details={
             "env": "ok" if env_ok else "missing",
             "pdf_count": len(pdfs),
+            "text_count": len(text_files),
             "has_json": bool(json_file),
             "index_ready": index_ready,
         },
