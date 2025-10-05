@@ -182,7 +182,7 @@ def chat(req: ChatRequest, response: Response):
         )
     if not query:
         response.status_code = 422
-        return ChatResponse(status_code=422, answer="", sources=[], error="Query cannot be empty.")
+        return ChatResponse(status_code=422, answer="", sources=[], tools=[], error="Query cannot be empty.")
 
     if STARTUP_ERROR:
         response.status_code = 503
