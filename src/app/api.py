@@ -15,14 +15,8 @@ from fastapi import FastAPI, Response
 from pydantic import BaseModel, Field
 
 # Reuse RAG pipeline utilities
-from src.rag import (
-    build_faiss_index,
-    chunk_documents,
-    load_github_json,
-    load_pdfs,
-    load_text_files,
-    run_query,
-)
+from src.agents import AgentController, EmailAgent, EmailService, SummarizerAgent
+from src.rag import build_faiss_index, chunk_documents, load_github_json, load_pdfs, load_text_files
 
 app = FastAPI(title="PersonalRAG API", version="1.0.0")
 
@@ -41,6 +35,7 @@ app.add_middleware(
 
 
 class ChatRequest(BaseModel):
+    session_id: str = Field(..., min_length=3, description="Conversation session identifier")
     query: str = Field(..., min_length=1, description="User question")
 
 
@@ -48,6 +43,7 @@ class ChatResponse(BaseModel):
     status_code: int = Field(..., ge=100, le=599, description="HTTP-like status code for the request outcome")
     answer: str = Field("", description="Answer text if available; empty on error")
     sources: List[str] = Field(default_factory=list, description="Unique list of source document identifiers")
+    tools: List[str] = Field(default_factory=list, description="Ordered list of tools invoked during the turn")
     error: Optional[str] = Field(None, description="Error message if any; null when success")
 
 
@@ -60,6 +56,10 @@ class HealthResponse(BaseModel):
 
 # Global vectorstore, built once on startup
 VECTORSTORE = None
+AGENT_CONTROLLER: Optional[AgentController] = None
+EMAIL_SERVICE: Optional[EmailService] = None
+EMAIL_AGENT: Optional[EmailAgent] = None
+SUMMARIZER_AGENT: Optional[SummarizerAgent] = None
 DOCS_DIR = CURRENT_DIR.parent / "docs"
 STARTUP_ERROR: Optional[str] = None
 
@@ -82,7 +82,7 @@ def _discover_files():
 
 @app.on_event("startup")
 def startup_build_index():
-    global VECTORSTORE, STARTUP_ERROR
+    global VECTORSTORE, STARTUP_ERROR, AGENT_CONTROLLER, EMAIL_SERVICE, EMAIL_AGENT, SUMMARIZER_AGENT
 
     try:
         # Basic env check
@@ -106,6 +106,15 @@ def startup_build_index():
 
         chunked = chunk_documents(all_docs)
         VECTORSTORE = build_faiss_index(chunked)
+
+        EMAIL_SERVICE = EmailService()
+        EMAIL_AGENT = EmailAgent(EMAIL_SERVICE)
+        SUMMARIZER_AGENT = SummarizerAgent()
+        AGENT_CONTROLLER = AgentController(
+            vectorstore=VECTORSTORE,
+            email_agent=EMAIL_AGENT,
+            summarizer_agent=SUMMARIZER_AGENT,
+        )
         STARTUP_ERROR = None
     except Exception as e:
         # Don't crash the app; mark as unavailable and report via /v1/chat
@@ -119,6 +128,7 @@ def health(response: Response):
     pdfs, text_files, json_file = _discover_files()
     docs_present = bool(pdfs or text_files or json_file)
     index_ready = VECTORSTORE is not None and not STARTUP_ERROR
+    agent_ready = AGENT_CONTROLLER is not None and index_ready
 
     if not env_ok:
         code = 503
@@ -132,6 +142,9 @@ def health(response: Response):
     elif not index_ready:
         code = 503
         msg = "Vector index not ready."
+    elif not agent_ready:
+        code = 503
+        msg = "Agent controller not initialized."
     else:
         code = 200
         msg = None
@@ -147,19 +160,30 @@ def health(response: Response):
             "text_count": len(text_files),
             "has_json": bool(json_file),
             "index_ready": index_ready,
+            "agent_ready": agent_ready,
+            "email_configured": bool(EMAIL_SERVICE and EMAIL_SERVICE.owner_address),
         },
     )
 
 
 @app.post("/v1/chat", response_model=ChatResponse)
 def chat(req: ChatRequest, response: Response):
-    # Normalize query and validate non-empty after trimming
+    session_id = (req.session_id or "").strip()
     query = (req.query or "").strip()
+
+    if not session_id:
+        response.status_code = 422
+        return ChatResponse(
+            status_code=422,
+            answer="",
+            sources=[],
+            tools=[],
+            error="Session identifier cannot be empty.",
+        )
     if not query:
         response.status_code = 422
         return ChatResponse(status_code=422, answer="", sources=[], error="Query cannot be empty.")
 
-    # If startup failed or vector index not ready, return service unavailable
     if STARTUP_ERROR:
         response.status_code = 503
         return ChatResponse(status_code=503, answer="", sources=[], error=STARTUP_ERROR)
@@ -168,33 +192,30 @@ def chat(req: ChatRequest, response: Response):
         response.status_code = 503
         return ChatResponse(status_code=503, answer="", sources=[], error="Vector index not ready.")
 
+    if AGENT_CONTROLLER is None:
+        response.status_code = 503
+        return ChatResponse(status_code=503, answer="", sources=[], error="Agent controller not ready.")
+
     try:
-        result = run_query(VECTORSTORE, query, k=4)
-        answer = result.get("result", "(No answer returned)")
-        raw_sources = [d.metadata.get("source", "unknown") for d in result.get("source_documents", [])]
-        # Deduplicate while preserving order
-        seen = set()
-        sources: List[str] = []
-        for s in raw_sources:
-            if s not in seen:
-                seen.add(s)
-                sources.append(s)
-        response.status_code = 200
-        return ChatResponse(status_code=200, answer=answer, sources=sources, error=None)
-    except Exception as e:
-        # Classify common upstream errors to help frontend handling
-        err = str(e)
-        err_l = err.lower()
-        if any(k in err_l for k in ["api key", "unauthorized", "authentication"]):
-            code = 401
-        elif any(k in err_l for k in ["rate limit", "too many requests"]):
-            code = 429
-        elif "timeout" in err_l:
-            code = 504
-        else:
-            code = 502
-        response.status_code = code
-        return ChatResponse(status_code=code, answer="", sources=[], error=f"Error generating answer: {err}")
+        result = AGENT_CONTROLLER.handle_message(session_id, query)
+    except Exception as exc:  # noqa: BLE001
+        response.status_code = 502
+        return ChatResponse(
+            status_code=502,
+            answer="",
+            sources=[],
+            tools=[],
+            error=f"Agent error: {exc}",
+        )
+
+    response.status_code = result.status_code
+    return ChatResponse(
+        status_code=result.status_code,
+        answer=result.message,
+        sources=result.sources,
+        tools=result.tools,
+        error=result.error if not result.ok else None,
+    )
 
 
 if __name__ == "__main__":
