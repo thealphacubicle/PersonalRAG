@@ -216,6 +216,7 @@ class AgentController:
         ) -> str:
             if "email_workflow" not in tools_used:
                 tools_used.append("email_workflow")
+            # Proceed directly to EmailAgent
             try:
                 payload = EmailAgentPayload(
                     intent=intent,
