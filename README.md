@@ -19,7 +19,7 @@ A minimal, production‑oriented Retrieval Augmented Generation (RAG) applicatio
 - 🌐 FastAPI endpoint: `POST /v1/chat`
 
 ---
-## Architecture
+## Architecture (Classic RAG)
 ```
                 +---------------------+
                 |  Source Documents   |
@@ -42,6 +42,72 @@ User Query ---> Prompt Assembly (System Persona + Context) ---> OpenAI Chat Mode
 ```
 
 ---
+## Multi‑Agent Architecture (Controller + Tools)
+
+This service also includes a lightweight, beginner‑friendly “multi‑agent” layer where one main conversation controller can call specialized tools:
+
+- Controller and tools: `src/agents/controller.py`
+- Summarizer: `src/agents/summarizer.py`
+- Email workflow + SMTP wrapper: `src/agents/email.py`
+- RAG utilities (load/chunk/index): `src/rag.py`
+- FastAPI server (startup, health, chat): `src/app/api.py`
+
+High‑level turn flow
+1) API receives `session_id` and `query` on `POST /v1/chat`.
+2) `AgentController` runs an LLM agent that can call tools.
+3) If needed, it calls `rag_search` to fetch context from FAISS.
+4) It drafts a reply and optionally calls `SummarizerAgent` to polish it.
+5) Returns the final text, unique `sources`, and ordered `tools` used.
+
+Email workflow flow
+1) If the user asks to contact/collaborate, the agent calls `email_workflow`.
+2) `EmailAgent` asks for name, email, and a short summary (if missing).
+3) It sends a 6‑digit verification code to the visitor’s email, then waits for the code.
+4) On the correct code (≤15 minutes, ≤3 attempts), it emails `OWNER_EMAIL` and CCs the visitor with the summary and recent chat snippets.
+
+Mermaid sequence diagram
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant API as FastAPI (`src/app/api.py`)
+    participant Ctrl as AgentController (`src/agents/controller.py`)
+    participant RAG as rag_search (FAISS)
+    participant Sum as SummarizerAgent (`src/agents/summarizer.py`)
+    participant Mail as EmailAgent (`src/agents/email.py`)
+
+    User->>API: POST /v1/chat {session_id, query}
+    API->>Ctrl: handle_message(session_id, query)
+    Ctrl->>Ctrl: Decide whether to call tools
+    alt Retrieval needed
+        Ctrl->>RAG: similarity_search(query, k)
+        RAG-->>Ctrl: contexts + sources
+    end
+    Ctrl->>Ctrl: Draft answer (LLM)
+    alt Retrieved contexts available
+        Ctrl->>Sum: summarize(question, contexts, draft, sources)
+        Sum-->>Ctrl: polished answer
+    end
+    opt User asks for introduction/collab
+        Ctrl->>Mail: email_workflow(intent, visitor_name/email, summary, code?)
+        Mail-->>Ctrl: user_message/status (multi‑turn until completed)
+    end
+    Ctrl-->>API: final message + sources + tools
+    API-->>User: JSON response (200/4xx/5xx)
+```
+
+Plain‑English component guide
+- AgentController (`src/agents/controller.py`)
+  - The “project manager” of each turn. Keeps chat history, exposes tools, calls retrieval when needed, and asks the summarizer to tighten the response.
+- rag_search tool (in controller)
+  - Looks up the most similar chunks in FAISS and returns their text plus unique source ids.
+- SummarizerAgent (`src/agents/summarizer.py`)
+  - Turns a draft + snippets into a short, natural answer grounded in the retrieved text.
+- EmailAgent + EmailService (`src/agents/email.py`)
+  - Multi‑step intro flow: gather details → send verification code → on success, send intro email to `OWNER_EMAIL` and CC the visitor. Falls back to logging when SMTP isn’t configured.
+- RAG utilities (`src/rag.py`)
+  - Loads PDFs/TXT/GitHub JSON from `src/docs/`, chunks, embeds (OpenAI), and builds an in‑memory FAISS index.
+
 ## Project Structure
 ```
 src/
