@@ -348,7 +348,9 @@ class EmailAgent:
 
 
 def _generate_code(length: int = 6) -> str:
-    return "".join(random.choice(_CODE_CHARS) for _ in range(length))
+    import secrets
+
+    return "".join(secrets.choice(_CODE_CHARS) for _ in range(length))
 
 
 def _extract_email(text: str) -> Optional[str]:

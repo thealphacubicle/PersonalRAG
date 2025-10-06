@@ -16,7 +16,13 @@ from pydantic import BaseModel, Field
 
 # Reuse RAG pipeline utilities
 from src.agents import AgentController, EmailAgent, EmailService, SummarizerAgent
-from src.rag import build_faiss_index, chunk_documents, load_github_json, load_pdfs, load_text_files
+from src.rag import (
+    build_faiss_index,
+    chunk_documents,
+    load_github_json,
+    load_pdfs,
+    load_text_files,
+)
 
 app = FastAPI(title="PersonalRAG API", version="1.0.0")
 
@@ -35,23 +41,36 @@ app.add_middleware(
 
 
 class ChatRequest(BaseModel):
-    session_id: str = Field(..., min_length=3, description="Conversation session identifier")
+    session_id: str = Field(
+        ..., min_length=3, description="Conversation session identifier"
+    )
     query: str = Field(..., min_length=1, description="User question")
 
 
 class ChatResponse(BaseModel):
-    status_code: int = Field(..., ge=100, le=599, description="HTTP-like status code for the request outcome")
+    status_code: int = Field(
+        ..., ge=100, le=599, description="HTTP-like status code for the request outcome"
+    )
     answer: str = Field("", description="Answer text if available; empty on error")
-    sources: List[str] = Field(default_factory=list, description="Unique list of source document identifiers")
-    tools: List[str] = Field(default_factory=list, description="Ordered list of tools invoked during the turn")
-    error: Optional[str] = Field(None, description="Error message if any; null when success")
+    sources: List[str] = Field(
+        default_factory=list, description="Unique list of source document identifiers"
+    )
+    tools: List[str] = Field(
+        default_factory=list,
+        description="Ordered list of tools invoked during the turn",
+    )
+    error: Optional[str] = Field(
+        None, description="Error message if any; null when success"
+    )
 
 
 class HealthResponse(BaseModel):
     status_code: int = Field(..., ge=100, le=599)
     ready: bool = Field(..., description="True when the service is fully operational")
     error: Optional[str] = Field(None, description="Error message if any")
-    details: Optional[dict] = Field(None, description="Optional diagnostics like env/docs/index status")
+    details: Optional[dict] = Field(
+        None, description="Optional diagnostics like env/docs/index status"
+    )
 
 
 # Global vectorstore, built once on startup
@@ -182,19 +201,39 @@ def chat(req: ChatRequest, response: Response):
         )
     if not query:
         response.status_code = 422
-        return ChatResponse(status_code=422, answer="", sources=[], tools=[], error="Query cannot be empty.")
+        return ChatResponse(
+            status_code=422,
+            answer="",
+            sources=[],
+            tools=[],
+            error="Query cannot be empty.",
+        )
 
     if STARTUP_ERROR:
         response.status_code = 503
-        return ChatResponse(status_code=503, answer="", sources=[], error=STARTUP_ERROR)
+        return ChatResponse(
+            status_code=503, answer="", sources=[], tools=[], error=STARTUP_ERROR
+        )
 
     if VECTORSTORE is None:
         response.status_code = 503
-        return ChatResponse(status_code=503, answer="", sources=[], error="Vector index not ready.")
+        return ChatResponse(
+            status_code=503,
+            answer="",
+            sources=[],
+            tools=[],
+            error="Vector index not ready.",
+        )
 
     if AGENT_CONTROLLER is None:
         response.status_code = 503
-        return ChatResponse(status_code=503, answer="", sources=[], error="Agent controller not ready.")
+        return ChatResponse(
+            status_code=503,
+            answer="",
+            sources=[],
+            tools=[],
+            error="Agent controller not ready.",
+        )
 
     try:
         result = AGENT_CONTROLLER.handle_message(session_id, query)
