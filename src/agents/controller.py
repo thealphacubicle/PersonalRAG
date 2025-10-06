@@ -155,7 +155,7 @@ class AgentController:
                     output_text = summary
                     if "summarizer" not in tools_used:
                         tools_used.append("summarizer")
-            except Exception as exc:  # noqa: BLE001
+            except (ValueError, ValidationError) as exc:
                 logger.exception("Summarizer failed: %s", exc)
 
         if self.moderation:
